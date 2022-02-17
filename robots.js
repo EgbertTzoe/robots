@@ -139,7 +139,7 @@ const roboApp = {
    }
 }
 roboApp.executor = {
-   execute: function (commands, multiple = false) {
+   execute(commands, multiple = false) {
       const table = roboApp.table;
       
       let robo = table.activeRobot;
@@ -239,7 +239,7 @@ roboApp.executor = {
 roboApp.UI = {
    tableCanvas: null,
    robotImages: [],
-   initialise: function () {
+   initialise() {
       this.robotImages[0] = document.getElementById('man-north');
       this.robotImages[1] = document.getElementById('man-east');
       this.robotImages[2] = document.getElementById('man-south');
@@ -259,7 +259,7 @@ roboApp.UI = {
 }
 roboApp.view = {
    cellSize: 80,
-   addLineToTextBox: function (elm, txt, scrollToBottom = true) {
+   addLineToTextBox(elm, txt, scrollToBottom = true) {
       if (elm.value) {
          elm.value += '\n';
       }
@@ -270,7 +270,7 @@ roboApp.view = {
          elm.scrollTop = elm.scrollHeight - elm.clientHeight;
       }
    },
-   drawTable: function (table, canvas) {
+   drawTable(table, canvas) {
       
       const iW = this.cellSize * table.x;
       const iH = this.cellSize * table.y;
@@ -323,11 +323,11 @@ roboApp.view = {
          ctx.fillText(robo.number, x + this.cellSize - 20, y + 20);
       }
    },
-   refresh: function () {
+   refresh() {
       this.drawTable(roboApp.table, roboApp.UI.tableCanvas);
       roboApp.UI.elmStep.focus();
    },
-   clear: function () {
+   clear() {
       roboApp.UI.elmStep.value = '';
       roboApp.UI.elmCommands.value = '';
       roboApp.UI.elmMessages.value = '';
@@ -336,12 +336,12 @@ roboApp.view = {
       
       this.refresh();
    },
-   log: function (msg) {
+   log(msg) {
       if (roboApp.options.logging) {
          roboApp.view.addLineToTextBox(roboApp.UI.elmMessages, msg);
       }
    },
-   report: function (obj) {
+   report(obj) {
       
       // return a string indicating a robot's position and facing:
       let roboPosition = (robo) => {
@@ -367,7 +367,7 @@ roboApp.view = {
       roboApp.UI.elmOutput.innerHTML = msg;
       roboApp.view.log('REPORT: ' + msg);
    },
-   whenCommandExcuted: function (r) {
+   whenCommandExcuted(r) {
       const robo = r.robot;
       let sMsg = '';
       switch (r.value) {
@@ -415,7 +415,7 @@ roboApp.view = {
          roboApp.view.log(sMsg);
       }
    },
-   load: function () {
+   load() {
       roboApp.executor.commandExcuted = this.whenCommandExcuted;
       roboApp.executor.doReport = this.report;
       
@@ -425,9 +425,9 @@ roboApp.view = {
    }
 }
 roboApp.controller = {
-   chooseExample: function (event) {
+   chooseExample(event) {
       let req = new XMLHttpRequest();
-      req.onreadystatechange = function() {
+      req.onreadystatechange = () => {
          if (req.readyState === 4 && req.status === 200) {
             roboApp.UI.elmCommands.value = req.responseText;
          }
@@ -437,21 +437,21 @@ roboApp.controller = {
       
       roboApp.UI.elmStep.focus();
    },
-   openFile: function (event) {
+   openFile(event) {
       let reader = new FileReader();
-      reader.onerror = function() {
+      reader.onerror = () => {
          roboApp.view.log('FAILURE: Could not read file - ' + reader.error.code);
       }
-      reader.onload = function() {
+      reader.onload = () => {
          roboApp.UI.elmCommands.value = reader.result;
       }
       reader.readAsText(event.target.files[0]);
    },
-   randomise: function () {
-      let randomInt = function (max) {
+   randomise() {
+      let randomInt = (max) => {
          return Math.floor(max * Math.random());
       }
-      let randomPlace = function () {
+      let randomPlace = () => {
          return {
             x: randomInt(roboApp.table.x),
             y: randomInt(roboApp.table.y),
@@ -485,21 +485,21 @@ roboApp.controller = {
       
       roboApp.UI.elmStep.focus();
    },
-   clear: function () {
+   clear() {
       roboApp.table.clear();
       roboApp.view.clear();
       roboApp.UI.elmStep.focus();
    },
-   exec: function (cmd) {
+   exec(cmd) {
       roboApp.options.multiple = roboApp.UI.elmMultiple.checked;
       roboApp.options.logging = roboApp.UI.elmLogging.checked;
       roboApp.executor.execute(cmd, roboApp.options.multiple);
       roboApp.view.refresh();
    },
-   go: function () {
+   go() {
       this.exec(roboApp.UI.elmCommands.value);
    },
-   whenStepKeyUp: function (event) {
+   whenStepKeyUp(event) {
       if (event.keyCode == 13) { // After user press ENTER key in the Step Input Box
          let cmd = event.target.value.trim().toUpperCase();
          if (cmd.length > 0) {
