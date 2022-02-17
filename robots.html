@@ -1,56 +1,56 @@
 ﻿<!DOCTYPE HTML>
 <html>
 <head>
-	<title>Robots</title>
-	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-	<script type="text/javascript" src="robots.js" type="text/javascript"></script>	
-	<link rel="stylesheet" href="robots.css" type="text/css" media="screen" />
+   <title>Robots</title>
+   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+   <script type="text/javascript" src="robots.js" type="text/javascript"></script>  
+   <link rel="stylesheet" href="robots.css" type="text/css" media="screen" />
 </head>
 <body onload="roboApp.view.load()">
-	<div class="header">
-		<label class="title">Tell the robots where to go</label>
-		<label> - input single command in the Step Box and press ENTER, or multiple commands in the Text Area</label>
-	</div>
-	<div class="menu-bar">
-		<select class="menu-item" required="false" onchange="roboApp.controller.chooseExample(event)">
-			<option value="" selected disabled hidden>choose example</option>
-			<option value="examples/example1.txt">example1.txt</option>
-			<option value="examples/example2.txt">example2.txt</option>
-			<option value="examples/example3.txt">example3.txt</option>
-		</select>
-		<span class="menu-seperator">|</span>
-		<input type="file" style="visibility:hidden;display:none" id="file-open" accept=".txt" onchange="roboApp.controller.openFile(event)">
-		<label class="menu-item" for="file-open">open file</label><span class="menu-seperator">|</span>
-		<a href="javascript:void(0)" class="menu-item" id="menu-randomise" onclick="roboApp.controller.randomise()">randomise</a><span class="menu-seperator">|</span>
-		<a href="javascript:void(0)" class="menu-item" id="menu-clear" onclick="roboApp.controller.clear()">clear</a><span class="menu-seperator">|</span>
-		<a href="javascript:void(0)" class="menu-item" id="menu-go" onclick="roboApp.controller.go()">go</a><span class="menu-seperator">|</span>
-		<label><input type="checkbox" id="chk-multiple">multiple robots</label>
-		<label><input type="checkbox" id="chk-logging" checked="true">logging</label>
-	</div>
-	<div class="body-block">
-		<div style="float:left;width:300px;height:400px;">
-			<div style="margin:1px 4px 8px 4px;">
-				<label class="code-bold">step: </label>
-				<input type="text" class="code-bold" style="width:227px;text-transform:uppercase;" id="txt-step" 
-					placeholder="single command here" 
-					onkeyup="roboApp.controller.whenStepKeyUp(event)"
-				>
-			</div>
-			<textarea class="command-box" style="width:280px;height:360px;" id="txt-commands" placeholder="multiple commands here"></textarea>
-		</div>
-		<canvas class="table" style="float:left" width="400" height="400" id="table">.</canvas>
-	</div>
-	<div class="body-block" >
-		<label class="code">output: </label><span class="code-bold" id="lbl-output"></span>
-	</div>
-	<div class="body-block" style="padding:0px 12px">
-		<textarea class="message-box" style="width:694px;height:200px" id="txt-messages" readonly="true"></textarea>
-	</div>
-	<div class="footer" style="display:none">
-		<img id="man-east" src="images/man-east.png">
-		<img id="man-west" src="images/man-west.png">
-		<img id="man-north" src="images/man-north.png">
-		<img id="man-south" src="images/man-south.png">
-	</div>
+   <div class="header">
+      <label class="title">Tell the robots where to go</label>
+      <label> - input single command in the Step Box and press ENTER, or multiple commands in the Text Area</label>
+   </div>
+   <div class="menu-bar">
+      <select class="menu-item" required="false" onchange="roboApp.controller.chooseExample(event)">
+         <option value="" selected disabled hidden>choose example</option>
+         <option value="examples/example1.txt">example1.txt</option>
+         <option value="examples/example2.txt">example2.txt</option>
+         <option value="examples/example3.txt">example3.txt</option>
+      </select>
+      <span class="menu-seperator">|</span>
+      <input type="file" style="visibility:hidden;display:none" id="file-open" accept=".txt" onchange="roboApp.controller.openFile(event)">
+      <label class="menu-item" for="file-open">open file</label><span class="menu-seperator">|</span>
+      <a href="javascript:void(0)" class="menu-item" id="menu-randomise" onclick="roboApp.controller.randomise()">randomise</a><span class="menu-seperator">|</span>
+      <a href="javascript:void(0)" class="menu-item" id="menu-clear" onclick="roboApp.controller.clear()">clear</a><span class="menu-seperator">|</span>
+      <a href="javascript:void(0)" class="menu-item" id="menu-go" onclick="roboApp.controller.go()">go</a><span class="menu-seperator">|</span>
+      <label><input type="checkbox" id="chk-multiple">multiple robots</label>
+      <label><input type="checkbox" id="chk-logging" checked="true">logging</label>
+   </div>
+   <div class="body-block">
+      <div style="float:left;width:300px;height:400px;">
+         <div style="margin:1px 4px 8px 4px;">
+            <label class="code-bold">step: </label>
+            <input type="text" class="code-bold" style="width:227px;text-transform:uppercase;" id="txt-step" 
+               placeholder="single command here" 
+               onkeyup="roboApp.controller.whenStepKeyUp(event)"
+            >
+         </div>
+         <textarea class="command-box" style="width:280px;height:360px;" id="txt-commands" placeholder="multiple commands here"></textarea>
+      </div>
+      <canvas class="table" style="float:left" width="400" height="400" id="table">.</canvas>
+   </div>
+   <div class="body-block" >
+      <label class="code">output: </label><span class="code-bold" id="lbl-output"></span>
+   </div>
+   <div class="body-block" style="padding:0px 12px">
+      <textarea class="message-box" style="width:694px;height:200px" id="txt-messages" readonly="true"></textarea>
+   </div>
+   <div class="footer" style="display:none">
+      <img id="man-east" src="images/man-east.png">
+      <img id="man-west" src="images/man-west.png">
+      <img id="man-north" src="images/man-north.png">
+      <img id="man-south" src="images/man-south.png">
+   </div>
 </body>
 </html>
