@@ -1,260 +1,28 @@
-﻿class Space2D {
-   constructor(x, y) {
-      this.x = x;
-      this.y = y;
-      this.map = new Map();
-   }
-   posToMapKey(x, y) {
-      return x + '|' + y;
-   }
-   isPosValid(x, y) {
-      return x >= 0 && x < this.x && y >= 0 && y < this.y;
-   }
-   isPosOccupied(x, y) {
-      return this.map.has(this.posToMapKey(x, y));
-   }
-   occupy(occupier, x, y) {
-      this.map.set(this.posToMapKey(x, y), occupier);
-   }
-   vacate(x, y) {
-      this.map.delete(this.posToMapKey(x, y));
-   }
-   clear() {
-      this.map.clear();
-   }
-}
-class Robot {
-   constructor(num) {
-      this.number = num;
-      this.x = -1;
-      this.y = -1;
-      this.facing = 0;  // 0 - north
-                        // 1 - east
-                        // 2 - south
-                        // 3 - west
-      this.space = null;
-   }
-   static facingAsString(facing) {
-      const arr = [
-         'NORTH',
-         'EAST',
-         'SOUTH',
-         'WEST'
-      ];
-      return arr[facing];
-   }
-   place(x, y, facing) {
-      if (!this.space.isPosValid(x, y)) {
-         return -1;
-      } else if (this.space.isPosOccupied(x, y)) {
-         return -2;
-      } else {
-         if (this.space.isPosValid(this.x, this.y)) {
-            this.space.vacate(this.x, this.y);
-         }
-         this.space.occupy(this, x, y);
-         this.x = x;
-         this.y = y;
-         this.facing = facing;
-         return 1;
-      }
-   }
-   turn(side) {
-      this.facing = (this.facing + 4 + side) % 4;
-   }
-   move(target) {
-      let x = this.x, y = this.y;
-      switch (this.facing) {
-         case 0: 
-            y++;
-            break;
-         case 1: 
-            x++;
-            break;
-         case 2: 
-            y--;
-            break;
-         case 3: 
-            x--;
-            break;
-      }
+﻿import * as robotics from './robotics.js';
+
+const COMMAND_IGNORED         =    0,
       
-      // Pass back the supposed target position:
-      if (target) {
-         target.x = x;
-         target.y = y;
-      }
+      ERROR_INVALID_COMMAND   =   -1,
+      ERROR_NO_ACTIVE_ROBOT   =   -2,
+      ERROR_NOT_ON_TABLE      =   -3,
       
-      if (!this.space.isPosValid(x, y)) {
-         return -1;
-      } else if (this.space.isPosOccupied(x, y)) {
-         return -2;
-      } else {
-         this.space.vacate(this.x, this.y);
-         this.space.occupy(this, x, y);
-         this.x = x;
-         this.y = y;
-         return 1;
-      }
-   }
-}
-class Table extends Space2D {
-   constructor(x, y) {
-      super(x, y);
-      this.robots = new Map();
-      this.activeRobot = null;
-      this.lastRobotNumber = 0;
-   }
-   addRobot(x, y, facing) {
-      const robo = new Robot(++this.lastRobotNumber);
-      robo.space = this;
-      robo.place(x, y, facing);
-      this.robots.set(robo.number, robo);
-      if (!this.activeRobot) {
-         this.activeRobot = robo;
-      }
-      return robo;
-   }
-   chooseRobot(num) {
-      if (this.robots.has(num)) {
-         this.activeRobot = this.robots.get(num);
-         return this.activeRobot;
-      } else {
-         return null;
-      }
-   }
-   clear() {
-      super.clear();
-      this.robots.clear();
-      this.lastRobotNumber = 0;
-      this.activeRobot = null;
-   }
-}
+      WARNING_POS_INVALID     = -100,
+      WARNING_POS_OCCUPIED    = -101,
+      
+      DONE_PLACED_ACTIVE      =  100,
+      DONE_PLACED             =  101,
+      DONE_RELOCATED          =  102,
+      
+      DONE_MOVED              =  200,
+      DONE_TURNED             =  300,
+      DONE_ACTIVATED          =  400;
+      
 const roboApp = {
-   table: new Table(5, 5),
+   table: new robotics.Table(5, 5),
+   executor: new robotics.Executor,
    options: {
       multiple: false,
       logging: true
-   }
-}
-const ROBO_CONSTS = {
-   RESULTS: {
-      COMMAND_IGNORED:           0,
-      
-      ERROR_INVALID_COMMAND:    -1,
-      ERROR_NO_ACTIVE_ROBOT:    -2,
-      ERROR_NOT_ON_TABLE:       -3,
-      
-      WARNING_POS_INVALID:    -100,
-      WARNING_POS_OCCUPIED:   -101,
-      
-      DONE_PLACED_ACTIVATED:   100,
-      DONE_PLACED:             101,
-      DONE_RELOCATED:          102,
-      
-      DONE_MOVED:              200,
-      
-      DONE_TURNED:             300,
-      
-      DONE_ACTIVATED:          400
-   }
-};
-roboApp.executor = {
-   execute(commands, multiple = false) {
-      const table = roboApp.table;
-      
-      let robo = table.activeRobot;
-      
-      let result = {};
-      
-      const arr = commands.split('\n');
-      
-      for (let cmd of arr) {
-         
-         cmd = cmd.trim().toUpperCase();
-         
-         result.command = cmd;
-         result.robot = robo;
-         result.value = 0;
-         
-         if (cmd.startsWith('ROBOT ')) {
-            let m = cmd.match(/^ROBOT[ ]+(\d+)/);
-            if (table.chooseRobot(Number(m[1]))) {
-               robo = table.activeRobot;
-               result.robot = robo;
-               result.value = 400;
-            } else {
-               result.value = -400;
-            }
-            result.command = 'ROBOT';
-            result.params = m[1];
-         } else if (cmd.startsWith('PLACE ')) {
-            const m = cmd.match(/^PLACE[ ]+(\d+)[ ]*,\s*(\d+)\s*,\s*(NORTH|SOUTH|EAST|WEST)/);
-            if (m) {
-               let x = Number(m[1]),
-                   y = Number(m[2]), 
-                   facing = 'NESW'.indexOf(m[3].substr(0, 1));
-               if (!table.isPosValid(x, y)) {
-                  result.value = -100;
-               } else if (table.isPosOccupied(x, y)) {
-                  result.value = -101;
-               } else {
-                  if (!robo) {                        
-                     // if there is no robot on the table, put a new one and activated it.
-                     robo = table.addRobot(x, y, facing);
-                     result.robot = robo;
-                     result.value = 100;
-                  } else if (roboApp.options.multiple) {
-                     // if there are robots on the table and System is in Multiple Mode, put a new one without activating it.
-                     result.robot = table.addRobot(x, y, facing);
-                     result.value = 101;
-                  } else {
-                     // if there are robots on the table and System is in Single Mode, relocate the active robot.
-                     robo.place(x, y, facing);
-                     result.value = 102;
-                  }
-               }
-               result.command = 'PLACE';
-               result.params = `${x},${y}`;
-            } else {
-               result.value = -1;
-            }
-         } else if (!robo) {
-            result.value = -2;
-         } else if (cmd == 'LEFT') {
-            robo.turn(-1);
-            result.value = 300;
-         } else if (cmd == 'RIGHT') {
-            robo.turn(1);
-            result.value = 300;
-         } else if (cmd == 'MOVE') {
-            let pos = {},
-               iMove = robo.move(pos);
-            if (iMove > 0) {
-               result.value = 200;
-            } else if (iMove == -1) {
-               result.value = -200;
-            } else if (iMove == -2) {
-               result.value = -201;
-            }
-            result.params = `${pos.x},${pos.y}`;
-         } else if (cmd == 'REPORT') {
-            if (multiple) {
-               this.doReport(table);
-            } else {
-               this.doReport(robo);
-            }
-            result.value = 1;
-         } else if (cmd.length < 1) {
-            ;
-         } else {
-            result.value = -1;
-         }
-         
-         if (result.value !== 0) {
-            this.commandExcuted(result);
-         }
-      }
    }
 }
 roboApp.UI = {
@@ -276,6 +44,12 @@ roboApp.UI = {
       
       this.elmMultiple = document.getElementById('chk-multiple');
       this.elmLogging = document.getElementById('chk-logging');
+       
+      this.elmExamples = document.getElementById('menu-examples');
+      this.elmMenuOpen = document.getElementById('menu-openfile');
+      this.elmMenuRandom = document.getElementById('menu-randomise');
+      this.elmMenuClear = document.getElementById('menu-clear');
+      this.elmMenuGo = document.getElementById('menu-go');
    }
 }
 roboApp.view = {
@@ -293,8 +67,8 @@ roboApp.view = {
    },
    drawTable(table, canvas) {
       
-      const iW = this.cellSize * table.x;
-      const iH = this.cellSize * table.y;
+      const iW = this.cellSize * table.sizeX;
+      const iH = this.cellSize * table.sizeY;
       
       const ctx = canvas.getContext("2d");
       
@@ -313,11 +87,11 @@ roboApp.view = {
       
       ctx.lineWidth = 2;
       ctx.beginPath();
-      for (let i = 0; i < table.y; i++) {
+      for (let i = 0; i < table.sizeY; i++) {
          ctx.moveTo( 0, this.cellSize * i);
          ctx.lineTo(iW, this.cellSize * i);
       }
-      for (let i = 0; i < table.x; i++) {
+      for (let i = 0; i < table.sizeX; i++) {
          ctx.moveTo(this.cellSize * i,  0);
          ctx.lineTo(this.cellSize * i, iH);
       }
@@ -365,68 +139,62 @@ roboApp.view = {
    report(obj) {
       
       // return a string indicating a robot's position and facing:
-      let roboPosition = ({x, y, facing}) => `${x},${y},${Robot.facingAsString(facing)}`;
+      let roboPosition = (robo) => `${robo.x},${robo.y},${robo.facingAsString()}`;
       
-      let msg;
-      if (obj instanceof Robot) {
-         msg = roboPosition(obj);
+      let sMessage;
+      if (obj instanceof robotics.Robot) {
+         sMessage = roboPosition(obj);
       } else {
          let robo = obj.activeRobot,
-            iCount = obj.robots.size,
-            sSuffix = '';
-         if (iCount > 1) {    // Apply plural suffix
-            sSuffix = 's';
+             roboCount = obj.robots.size,
+             suffix = '';
+         if (roboCount > 1) {    // Apply plural suffix
+            suffix = 's';
          }
-         msg = `${iCount} robot${sSuffix} on table`
+         sMessage = `${roboCount} robot${suffix} on table`
          if (robo) {
-            msg += `. Robot ${robo.number} at (${roboPosition(robo)}) is active`;
+            sMessage += `. Robot ${robo.number} at (${roboPosition(robo)}) is active`;
          }
       }
       
-      roboApp.UI.elmOutput.innerHTML = msg;
-      roboApp.view.log('REPORT: ' + msg);
+      roboApp.UI.elmOutput.innerHTML = sMessage;
+      roboApp.view.log('REPORT: ' + sMessage);
    },
-   whenCommandExcuted(r) {
-      const robo = r.robot;
+   whenCommandExcuted(result) {
+      const robo = result.robot;
       let sMsg = '';
-      switch (r.value) {
-         case -1: 
-            sMsg = 'ERROR: Invalid command - ' + r.command;
+      switch (result.value) {
+         case ERROR_INVALID_COMMAND: 
+            sMsg = 'ERROR: Invalid command - ' + result.command;
             break;
-         case -2: 
+         case ERROR_NO_ACTIVE_ROBOT: 
             sMsg = 'ERROR: There is no active robot';
             break;
-         case -100: 
-            sMsg = `WARNING: Position (${r.params}) is out of table`;
+         case ERROR_NO_ACTIVE_ROBOT: 
+            sMsg = `ERROR: Robot ${result.params} is not on table`;
             break;
-         case -101: 
-            sMsg = `WARNING: Position (${r.params}) is occupied`;
+         case WARNING_POS_INVALID: 
+            sMsg = `WARNING: Position (${result.params}) is out of table`;
             break;
-         case -200: 
-            sMsg = `WARNING: Motion forbidden - (${r.params}) is out of table`;
+         case WARNING_POS_OCCUPIED: 
+            sMsg = `WARNING: Position (${result.params}) is occupied`;
             break;
-         case -201: 
-            sMsg = `WARNING: Motion forbidden - (${r.params}) is occupied`;
-            break;
-         case -400: 
-            sMsg = `ERROR: Robot ${r.params} is not on table`;
-            break;
-         case 100: 
+         case DONE_PLACED_ACTIVE: 
             sMsg = `DONE: Robot ${robo.number} was placed at (${robo.x},${robo.y}) and activated`;
             break;
-         case 101: 
+         case DONE_PLACED: 
             sMsg = `DONE: Robot ${robo.number} was placed at (${robo.x},${robo.y})`;
             break;
-         case 102: 
+         case DONE_RELOCATED: 
             sMsg = `DONE: Robot ${robo.number} was relocated to (${robo.x},${robo.y})`;
             break;
-         case 200: 
+         case DONE_MOVED: 
             sMsg = `DONE: Robot ${robo.number} moved to (${robo.x},${robo.y})`;
             break;
-         case 300: 
-            sMsg = `DONE: Robot ${robo.number} turned to ${Robot.facingAsString(robo.facing)}`;
+         case DONE_TURNED: 
+            sMsg = `DONE: Robot ${robo.number} turned to ${robo.facingAsString()}`;
             break;
-         case 400: 
+         case DONE_ACTIVATED: 
             sMsg = `DONE: Robot ${robo.number} was activated`;
             break;
       }
@@ -434,14 +202,6 @@ roboApp.view = {
          roboApp.view.log(sMsg);
       }
    },
-   load() {
-      roboApp.executor.commandExcuted = this.whenCommandExcuted;
-      roboApp.executor.doReport = this.report;
-      
-      roboApp.UI.initialise();
-      
-      this.refresh();
-   }
 }
 roboApp.controller = {
    chooseExample(event) {
@@ -467,41 +227,7 @@ roboApp.controller = {
       reader.readAsText(event.target.files[0]);
    },
    randomise() {
-      let randomInt = (max) => Math.floor(max * Math.random());
-
-      let randomPlace = () => {
-         return {
-            x: randomInt(roboApp.table.x),
-            y: randomInt(roboApp.table.y),
-            facing: Robot.facingAsString(randomInt(4))
-         }
-      }
-      
-      let commands = [];
-      
-      let r = randomPlace();
-      commands.push(`PLACE ${r.x},${r.y},${r.facing}`);
-      
-      for (let i = 0; i < 10; i++) {
-         r = randomInt(3) - 1;
-         if (r < 0) {
-            commands.push('LEFT');
-         } else if (r > 0) {
-            commands.push('RIGHT');
-         }
-         if (Math.random() > 0.5) {
-            commands.push('MOVE');
-         }
-         if (Math.random() > 0.9) {
-            let r = randomPlace();
-            commands.push(`PLACE ${r.x},${r.y},${r.facing}`);
-         }
-      }
-      
-      commands.push('REPORT');
-      
-      roboApp.UI.elmCommands.value = commands.join('\n');
-      
+      roboApp.UI.elmCommands.value = roboApp.executor.generateRandomCommands(roboApp.table);
       roboApp.UI.elmStep.focus();
    },
    clear() {
@@ -512,21 +238,39 @@ roboApp.controller = {
    exec(cmd) {
       roboApp.options.multiple = roboApp.UI.elmMultiple.checked;
       roboApp.options.logging = roboApp.UI.elmLogging.checked;
-      roboApp.executor.execute(cmd, roboApp.options.multiple);
+      roboApp.executor.execute(roboApp.table, cmd, roboApp.options.multiple);
       roboApp.view.refresh();
    },
    go() {
-      this.exec(roboApp.UI.elmCommands.value);
+      roboApp.controller.exec(roboApp.UI.elmCommands.value);
    },
+   // After user press ENTER key in the Step Input Box
    whenStepKeyUp(event) {
-      // After user press ENTER key in the Step Input Box
       if (event.keyCode == 13) {
-         let cmd = event.target.value.trim().toUpperCase();
+         const cmd = event.target.value.trim().toUpperCase();
          if (cmd.length > 0) {
             roboApp.controller.exec(cmd);
             roboApp.view.addLineToTextBox(roboApp.UI.elmCommands, cmd);
             event.target.value = '';
          }
       }
-   }
+   },
+   load() {
+      roboApp.UI.initialise();
+      
+      roboApp.UI.elmExamples.addEventListener('change', roboApp.controller.chooseExample);
+      roboApp.UI.elmMenuOpen.addEventListener('change', roboApp.controller.openFile);
+      roboApp.UI.elmMenuRandom.addEventListener('click', roboApp.controller.randomise);
+      roboApp.UI.elmMenuClear.addEventListener('click', roboApp.controller.clear);
+      roboApp.UI.elmMenuGo.addEventListener('click', roboApp.controller.go);
+      roboApp.UI.elmStep.addEventListener('keyup', roboApp.controller.whenStepKeyUp);
+      
+      roboApp.executor.excuted = roboApp.view.whenCommandExcuted;
+      roboApp.executor.doReport = roboApp.view.report;
+      
+      roboApp.view.refresh();
+   },
 }
+
+window.addEventListener('load', roboApp.controller.load);
+
