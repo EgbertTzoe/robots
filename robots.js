@@ -34,22 +34,22 @@ roboApp.UI = {
       this.robotImages[2] = document.getElementById('man-south');
       this.robotImages[3] = document.getElementById('man-west');
       
-      this.tableCanvas = document.getElementById('table');
+      this.tableCanvas    = document.getElementById('table');
       
-      this.elmStep = document.getElementById('txt-step');
-      this.elmCommands = document.getElementById('txt-commands');
-      this.elmMessages = document.getElementById('txt-messages');
+      this.elmStep        = document.getElementById('txt-step');
+      this.elmCommands    = document.getElementById('txt-commands');
+      this.elmMessages    = document.getElementById('txt-messages');
       
-      this.elmOutput = document.getElementById('lbl-output');
+      this.elmOutput      = document.getElementById('lbl-output');
       
-      this.elmMultiple = document.getElementById('chk-multiple');
-      this.elmLogging = document.getElementById('chk-logging');
+      this.elmMultiple    = document.getElementById('chk-multiple');
+      this.elmLogging     = document.getElementById('chk-logging');
        
-      this.elmExamples = document.getElementById('menu-examples');
-      this.elmMenuOpen = document.getElementById('menu-openfile');
-      this.elmMenuRandom = document.getElementById('menu-randomise');
-      this.elmMenuClear = document.getElementById('menu-clear');
-      this.elmMenuGo = document.getElementById('menu-go');
+      this.elmExamples    = document.getElementById('menu-examples');
+      this.elmMenuOpen    = document.getElementById('menu-openfile');
+      this.elmMenuRandom  = document.getElementById('menu-randomise');
+      this.elmMenuClear   = document.getElementById('menu-clear');
+      this.elmMenuGo      = document.getElementById('menu-go');
    }
 }
 roboApp.view = {
@@ -58,7 +58,6 @@ roboApp.view = {
       if (elm.value) {
          elm.value += '\n';
       }
-      
       elm.value += txt;
       
       if (scrollToBottom) {
