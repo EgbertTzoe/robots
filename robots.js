@@ -137,15 +137,37 @@ const roboApp = {
       logging: true
    }
 }
+const ROBO_CONSTS = {
+   RESULTS: {
+      COMMAND_IGNORED:           0,
+      
+      ERROR_INVALID_COMMAND:    -1,
+      ERROR_NO_ACTIVE_ROBOT:    -2,
+      ERROR_NOT_ON_TABLE:       -3,
+      
+      WARNING_POS_INVALID:    -100,
+      WARNING_POS_OCCUPIED:   -101,
+      
+      DONE_PLACED_ACTIVATED:   100,
+      DONE_PLACED:             101,
+      DONE_RELOCATED:          102,
+      
+      DONE_MOVED:              200,
+      
+      DONE_TURNED:             300,
+      
+      DONE_ACTIVATED:          400
+   }
+};
 roboApp.executor = {
    execute(commands, multiple = false) {
       const table = roboApp.table;
       
       let robo = table.activeRobot;
       
-      const arr = commands.split('\n');
-      
       let result = {};
+      
+      const arr = commands.split('\n');
       
       for (let cmd of arr) {
          
@@ -170,8 +192,8 @@ roboApp.executor = {
             const m = cmd.match(/^PLACE[ ]+(\d+)[ ]*,\s*(\d+)\s*,\s*(NORTH|SOUTH|EAST|WEST)/);
             if (m) {
                let x = Number(m[1]),
-                  y = Number(m[2]), 
-                  facing = 'NESW'.indexOf(m[3].substr(0, 1));
+                   y = Number(m[2]), 
+                   facing = 'NESW'.indexOf(m[3].substr(0, 1));
                if (!table.isPosValid(x, y)) {
                   result.value = -100;
                } else if (table.isPosOccupied(x, y)) {
@@ -343,7 +365,7 @@ roboApp.view = {
    report(obj) {
       
       // return a string indicating a robot's position and facing:
-      let roboPosition = (robo) => `${robo.x},${robo.y},${Robot.facingAsString(robo.facing)}`;
+      let roboPosition = ({x, y, facing}) => `${x},${y},${Robot.facingAsString(facing)}`;
       
       let msg;
       if (obj instanceof Robot) {
